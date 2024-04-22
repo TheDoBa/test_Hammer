@@ -1,9 +1,11 @@
 import os
 import json
 import random
+import secrets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 
 from users.models import User
@@ -16,20 +18,45 @@ class SendCodeView(APIView):
     def post(self, request):
         phone_number = request.data.get('phone_number')
 
-        # Создвние случайного 4-ех значного кода
+        # Создание случайного 4-значного кода подтверждения
         verification_code = ''.join(random.choices('0123456789', k=4))
 
+        # Создание инвайт-кода
+        invitation_code = secrets.token_hex(3)  # 3 байта (6 символов)
+
+        # Проверяем, существует ли пользователь с таким номером телефона
+        user_model = get_user_model()
+        user, created = user_model.objects.get_or_create(
+            phone_number=phone_number)
+
+        # Если пользователь создан впервые, сохраняем инвайт-код
+        if created:
+            user.invitation_code = invitation_code
+            user.save()
+
         # Отправка кода подтверждения
-        if self.send_verification_code(phone_number, verification_code):
-            return Response({"status": "Code sent"}, status=status.HTTP_200_OK)
+        if self.send_verification_code(
+            phone_number,
+            verification_code,
+            invitation_code
+        ):
+            return Response(
+                {"status": "Code sent", "invitation_code": invitation_code},
+                status=status.HTTP_200_OK
+            )
         else:
             return Response(
                 {"error": "Failed to send code"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    def send_verification_code(self, phone_number, verification_code):
-        """Сохраняет код подтверждения в файл."""
+    def send_verification_code(
+            self,
+            phone_number,
+            verification_code,
+            invitation_code
+    ):
+        """Сохраняет код подтверждения и инвайт-код в файл."""
 
         file_path = 'verification_code.json'
         if os.path.exists(file_path):
@@ -39,6 +66,10 @@ class SendCodeView(APIView):
             verification_codes = {}
 
         verification_codes[phone_number] = verification_code
+
+        # Добавление инвайт-кода вместе с кодом подтверждения
+        verification_codes[phone_number + '_invite'] = invitation_code
+
         with open(file_path, 'w') as file:
             json.dump(verification_codes, file)
 
