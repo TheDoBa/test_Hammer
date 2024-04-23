@@ -10,11 +10,14 @@ load_dotenv(
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-=)js)c#w#-sno53l&gvg%dds9n&iw2^!igwgoq02a63gotmd7g'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'www.TheDoBa.pythonanywhere.com',
+    'TheDoBa.pythonanywhere.com',
+]
 
 
 INSTALLED_APPS = [
@@ -89,9 +92,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-Ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 

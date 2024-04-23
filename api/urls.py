@@ -1,5 +1,11 @@
 from django.urls import path
-from .views import SendCodeView, VerifyCodeView, ProfileView, ActivateInviteView, InvitedUsersView
+from .views import (
+    SendCodeView,
+    VerifyCodeView,
+    ProfileView,
+    ActivateInviteView,
+    InvitedUsersView
+)
 
 urlpatterns = [
     path('send-code/', SendCodeView.as_view(), name='send_code'),
